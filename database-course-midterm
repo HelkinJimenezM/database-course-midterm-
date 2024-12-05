@@ -1,0 +1,190 @@
+(10 puntos) Realice el modelado de los requerimientos de datos de MIOvilidad (use notación CHEN)
+Entidades y relaciones principales:
+•  Entidades:
+•	Bus: Modelo, fecha de compra, capacidad, estado.
+•	Conductor: Código único, nombre, identificación, licencia, experiencia.
+•	Operario: Código único, nombre, identificación, licencia, experiencia.
+•	Estación: Nombre, ubicación, capacidad máxima de pasajeros.
+•	Ruta: Nombre, tiempo promedio de recorrido, estaciones asociadas.
+•	Mantenimiento: Fecha, descripción, operario, bus/estación.
+•	Viaje: Fecha, hora, ruta, bus asignado, número de pasajeros estimado.
+•  Relaciones:
+•	Un bus puede estar asignado a varios viajes.
+•	Un operario puede realizar múltiples mantenimientos en estaciones o buses.
+•	Un bus cubre múltiples rutas, pero cada viaje tiene solo una ruta asignada.
+•	Una ruta pasa por varias estaciones.
+•	Conductores son asignados a buses
+
+
+(10 puntos) Realice la transformación del Entidad-relación (ER) al modelo relacional (REL)
+
+•	Tabla Buses: id_bus, modelo, fecha_de_compra, capacidad, estado.
+•	Tabla Conductores: id_conductor, nombre, identificación, licencia, años_experiencia.
+•	Tabla Operarios: id_operario, nombre, identificación, licencia, años_experiencia.
+•	Tabla Estaciones: id_estación, nombre, ubicación_latitud, ubicación_longitud, capacidad_maxima.
+•	Tabla Rutas: id_ruta, nombre_ruta, tiempo_promedio_recorrido.
+•	Tabla Visitas de Mantenimiento: id_visita, fecha, descripción, id_bus, id_estación, id_operario.
+•	Tabla Registros de Viajes: id_viaje, fecha, hora, id_ruta, id_bus, número_de_pasajeros.
+ 
+(5 puntos) Escribe las instrucciones del DDL para crear las relaciones de su diseño lógico
+•  Tabla de Buses:
+sql
+Copiar código
+CREATE TABLE Buses (
+  bus_id SERIAL PRIMARY KEY,
+  modelo VARCHAR(100),
+  fecha_compra DATE,
+  capacidad INT,
+  estado VARCHAR(50)
+);
+•  Tabla de Conductores:
+sql
+Copiar código
+CREATE TABLE Conductores (
+  conductor_id SERIAL PRIMARY KEY,
+  nombre VARCHAR(100),
+  identificacion VARCHAR(50) UNIQUE,
+  licencia VARCHAR(50),
+  experiencia INT
+);
+•  Tabla de Operarios:
+sql
+Copiar código
+CREATE TABLE Operarios (
+  operario_id SERIAL PRIMARY KEY,
+  nombre VARCHAR(100),
+  identificacion VARCHAR(50) UNIQUE,
+  licencia VARCHAR(50),
+  experiencia INT
+);
+•  Tabla de Estaciones:
+sql
+Copiar código
+CREATE TABLE Estaciones (
+  estacion_id SERIAL PRIMARY KEY,
+  nombre VARCHAR(100),
+  latitud FLOAT,
+  longitud FLOAT,
+  capacidad_maxima INT
+);
+•  Tabla de Rutas:
+sql
+Copiar código
+CREATE TABLE Rutas (
+  ruta_id SERIAL PRIMARY KEY,
+  nombre VARCHAR(100),
+  tiempo_promedio_recorrido INT -- en minutos
+);
+•  Tabla de Mantenimiento:
+sql
+Copiar código
+CREATE TABLE Mantenimiento (
+  mantenimiento_id SERIAL PRIMARY KEY,
+  fecha DATE,
+  descripcion TEXT,
+  operario_id INT,
+  bus_id INT,
+  estacion_id INT,
+  FOREIGN KEY (operario_id) REFERENCES Operarios(operario_id),
+  FOREIGN KEY (bus_id) REFERENCES Buses(bus_id),
+  FOREIGN KEY (estacion_id) REFERENCES Estaciones(estacion_id)
+);
+•  Tabla de Viajes:
+sql
+Copiar código
+CREATE TABLE Viajes (
+  viaje_id SERIAL PRIMARY KEY,
+  fecha DATE,
+  hora TIME,
+  ruta_id INT,
+  bus_id INT,
+  pasajeros_estimados INT,
+  FOREIGN KEY (ruta_id) REFERENCES Rutas(ruta_id),
+  FOREIGN KEY (bus_id) REFERENCES Buses(bus_id)
+);
+•  Tabla de Estación_Ruta (relación entre Estaciones y Rutas):
+sql
+Copiar código
+CREATE TABLE Estacion_Ruta (
+  estacion_id INT,
+  ruta_id INT,
+  PRIMARY KEY (estacion_id, ruta_id),
+  FOREIGN KEY (estacion_id) REFERENCES Estaciones(estacion_id),
+  FOREIGN KEY (ruta_id) REFERENCES Rutas(ruta_id)
+);
+
+
+(2 puntos) Escriba las instrucciones para levantar un contenedor con postgres, un contenedor con pgadmin y pruebe las instrucciones del DDL
+docker run --name postgres-container -e POSTGRES_PASSWORD=mysecretpassword -d postgres 
+docker run --name pgadmin-container -e PGADMIN_DEFAULT_EMAIL=admin@admin.com -e PGADMIN_DEFAULT_PASSWORD=admin -p 80:80 -d dpage/pgadmin4
+
+(5 puntos) Escriba las instrucciones para insertar 5 buses, 3 conductores, 3 operarios
+a) Insertar 5 Buses
+sql
+Copiar código
+INSERT INTO Buses (modelo, fecha_compra, capacidad, estado)
+VALUES
+  ('Volvo 8900', '2020-01-10', 50, 'activo'),
+  ('Mercedes-Benz Sprinter', '2021-05-20', 45, 'activo'),
+  ('Scania Citywide', '2019-07-15', 60, 'desactivado'),
+  ('MAN Lion\'s City', '2022-03-25', 55, 'activo'),
+  ('Renault Citybus', '2018-11-11', 40, 'desactivado');
+b) Insertar 3 Conductores
+sql
+Copiar código
+INSERT INTO Conductores (nombre, identificacion, licencia, experiencia)
+VALUES
+  ('Carlos Pérez', '1234567890', 'A1', 5),
+  ('Marta Gómez', '9876543210', 'A2', 8),
+  ('Juan Díaz', '1122334455', 'B1', 3);
+c) Insertar 3 Operarios
+sql
+Copiar código
+INSERT INTO Operarios (nombre, identificacion, licencia, experiencia)
+VALUES
+  ('Luis Rodríguez', '5554443332', 'Mantenimiento A', 6),
+  ('Ana Martínez', '1112233445', 'Mantenimiento B', 4),
+  ('Pedro Sánchez', '6667778889', 'Mantenimiento A', 10);
+
+(2 puntos) Escriba las instrucciones para insertar 5 estaciones por cada tipo (estaciones)
+
+-- Estaciones de buses
+INSERT INTO Estaciones (nombre, latitud, longitud, capacidad_maxima)
+VALUES
+  ('Estación Centro', 3.43722, -76.5225, 100),
+  ('Estación Norte', 3.45421, -76.5109, 120),
+  ('Estación Sur', 3.40580, -76.5310, 90);
+
+-- Estaciones de servicio (de mantenimiento o recarga)
+INSERT INTO Estaciones (nombre, latitud, longitud, capacidad_maxima)
+VALUES
+  ('Estación Mantenimiento Norte', 3.4612, -76.5065, 10),
+  ('Estación Mantenimiento Sur', 3.4002, -76.5501, 10); 
+
+(10 puntos) Escriba las instrucciones para insertar 6 visitas de mantenimiento
+
+INSERT INTO Mantenimiento (fecha, descripcion, operario_id, bus_id, estacion_id)
+VALUES
+  ('2024-01-10', 'Revisión general del motor y limpieza', 1, 1, 1),
+  ('2024-01-12', 'Cambio de frenos en el bus', 2, 2, 2),
+  ('2024-01-15', 'Mantenimiento de aire acondicionado', 3, 3, 3),
+  ('2024-01-18', 'Inspección de la estación y limpieza de vías', 1, 4, 4),
+  ('2024-01-20', 'Reemplazo de luces en la estación', 2, 5, 5),
+  ('2024-01-22', 'Revisión de sistema eléctrico del bus', 3, 1, 2);
+
+(3 puntos) Escriba las instrucciones para insertar 3 rutas
+
+INSERT INTO Rutas (nombre, tiempo_promedio_recorrido)
+VALUES
+  ('Ruta A - Centro-Norte', 30),
+  ('Ruta B - Sur-Centro', 35),
+  ('Ruta C - Norte-Sur', 40);
+
+(3 puntos) Pegue una captura de pantalla de las últimas 5 registro de viajes
+INSERT INTO Viajes (fecha, hora, ruta_id, bus_id, pasajeros_estimados)
+VALUES
+  ('2024-01-10', '08:30:00', 1, 1, 45),
+  ('2024-01-11', '09:00:00', 2, 2, 50),
+  ('2024-01-12', '10:15:00', 3, 3, 55),
+  ('2024-01-13', '11:45:00', 1, 4, 40),
+  ('2024-01-14', '14:00:00', 2, 5, 60);
